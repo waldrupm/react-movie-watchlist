@@ -44,12 +44,14 @@ export default class App extends Component {
     });
   };
 
+  // TODO add movie watchlist scoped to users
   addToWatchlist = () => {};
 
   render() {
     return (
       <div>
         <Router>
+          {/* change navbar based on login status */}
           <Navbar
             authenticate={this.authenticate}
             logout={this.logout}
