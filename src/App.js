@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Route, Switch, BrowserRouter as Router } from "react-router-dom";
+import { Route, Switch, Redirect } from "react-router-dom";
 import "./css-build.css";
 import Navbar from "./components/Navbar";
 import Home from "./views/Home";
@@ -7,13 +7,16 @@ import Search from "./views/Search";
 import Watchlist from "./views/Watchlist";
 import SingleMovie from "./views/SingleMovie";
 import firebase from "firebase";
-import db, { firebaseApp } from "./firebase";
+import { firebaseApp } from "./firebase";
+import db from "./firebase.js";
 
 export default class App extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       uid: null,
+      message: "",
+      redirect: null,
     };
   }
 
@@ -26,7 +29,6 @@ export default class App extends Component {
   }
 
   authHandler = async (authData) => {
-    console.log(authData);
     this.setState({
       uid: authData.user.uid,
     });
@@ -44,39 +46,65 @@ export default class App extends Component {
     });
   };
 
-  // TODO add movie watchlist scoped to users
-  addToWatchlist = () => {};
+  addToWatchlist = (id) => {
+    if (this.state.uid) {
+      db.collection("watchlistMovies")
+        .add({
+          movieId: id,
+          uid: this.state.uid,
+          watched: false,
+        })
+        .then(() => {
+          // TODO figure out redirects after adding to watchlist, the catch and else below also won't work.
+          this.setState({ redirect: "/watchlist" });
+        })
+        .catch((error) => {
+          console.log("error", error);
+          return <Redirect to="/" />;
+        });
+    } else {
+      this.setState({ redirect: "/" });
+    }
+  };
+
+  toggleWatchedStatus = (id) => {};
 
   render() {
+    if (this.state.redirect) {
+      return <Redirect to={this.state.redirect} />;
+    }
     return (
       <div>
-        <Router>
-          {/* change navbar based on login status */}
-          <Navbar
-            authenticate={this.authenticate}
-            logout={this.logout}
-            user={this.state.uid}
-          />
+        {/* change navbar based on login status */}
+        <Navbar
+          authenticate={this.authenticate}
+          logout={this.logout}
+          user={this.state.uid}
+        />
 
-          <main>
-            {this.state.uid ? `${this.state.uid}` : "not logged in"}
-            <Switch>
-              <Route exact path="/" render={() => <Home />} />
-              <Route exact path="/search" render={() => <Search />} />
-              <Route exact path="/watchlist" render={() => <Watchlist />} />
-              <Route
-                exact
-                Path="/movie/:id"
-                render={({ match }) => (
-                  <SingleMovie
-                    addToWatchlist={this.addToWatchlist}
-                    match={match}
-                  />
-                )}
-              />
-            </Switch>
-          </main>
-        </Router>
+        <main>
+          <Switch>
+            <Route exact path="/">
+              <Home addToWatchlist={this.addToWatchlist} />
+            </Route>
+            <Route exact path="/search">
+              <Search addToWatchlist={this.addToWatchlist} />
+            </Route>
+            <Route exact path="/watchlist">
+              <Watchlist user={this.state.uid} />
+            </Route>
+            <Route
+              exact
+              path="/movie/:id"
+              render={({ match }) => (
+                <SingleMovie
+                  addToWatchlist={this.addToWatchlist}
+                  match={match}
+                />
+              )}
+            />
+          </Switch>
+        </main>
       </div>
     );
   }

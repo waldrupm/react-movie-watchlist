@@ -30,7 +30,12 @@ export default class Home extends Component {
         </h2>
         <div className="flex flex-wrap items-center justify-center">
           {this.state.movies.map((movie, idx) => {
-            return <MovieCard movie={movie} />;
+            return (
+              <MovieCard
+                movie={movie}
+                addToWatchlist={this.props.addToWatchlist}
+              />
+            );
           })}
         </div>
       </div>

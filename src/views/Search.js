@@ -53,7 +53,13 @@ export default class Search extends Component {
         <div className="container mx-auto text-center">
           <div className="flex flex-wrap items-center justify-center">
             {this.state.results.map((movie, idx) => {
-              return <MovieCard movie={movie} />;
+              return (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  addToWatchlist={this.props.addToWatchlist}
+                />
+              );
             })}
           </div>
         </div>
